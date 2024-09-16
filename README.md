@@ -23,8 +23,8 @@ Before using this script, ensure you have:
 
 1. **Clone the repository**:
    ```bash
-   git clone https://your-repository-url.git
-   cd your-repository-directory
+   git clone git@github.com:DyanGalih/telegram-bot-server-monitoring.git
+   cd telegram-bot-server-monitoring
    ```
 
 2. **Edit the script**:
