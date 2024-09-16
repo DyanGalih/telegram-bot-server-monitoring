@@ -18,7 +18,7 @@
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 # Agent version
-VERSION="0.0.1"
+VERSION="0.0.2"
 
 # Chat Id
 CHAT_ID=[CHAT_ID]
@@ -28,6 +28,9 @@ MESSAGE_ID=[MESSAGE_ID]
 
 # Telegram token
 TOKEN=[TELEGRAM_BOT_TOKEN]
+
+# Set Timezone
+TZ=[TZ]
 
 # Prepare values
 function PREP ()
@@ -132,9 +135,11 @@ fi
 
 CPU_LOAD=$(PREP "$((100 - $(vmstat 1 2 | tail -1 | awk '{print $15}')))")
 
-LAST_UPDATE=$(PREP "$(date|awk '{print $4 }')")
+CONVERT_TIMEZONE=$(TZ="$TZ" date)
+
+LAST_UPDATE=$(PREP "$CONVERT_TIMEZONE")
 
 # Build data for post
-DATA="Hostname = $HOSTNAME [$LAST_UPDATE] %0AUptime Server = $UPTIME %0ARam Free = $RAM_FREE %0ADisk Available = $DISK_AVAILABLE %0AConnections = $CONNECTIONS %0ACPU Load = $CPU_LOAD"
+DATA="Last Update = $LAST_UPDATE %0AHostname = $HOSTNAME %0AUptime Server = $UPTIME %0ARam Free = $RAM_FREE %0ADisk Available = $DISK_AVAILABLE %0AConnections = $CONNECTIONS %0ACPU Load = $CPU_LOAD"
 
 curl --max-time 10 -d chat_id=$CHAT_ID -d message_id=$MESSAGE_ID -d text="$DATA" "https://api.telegram.org/bot$TOKEN/editMessageText"

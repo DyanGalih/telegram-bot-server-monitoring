@@ -29,8 +29,10 @@ Before using this script, ensure you have:
 
 2. **Edit the script**:
    Open `telegram_monitor.sh` and replace the placeholders in the script:
-    - `[chat_id]`: Replace this with your Telegram `chat_id`.
-    - `[telegram_bot_token]`: Replace this with your Telegram bot token.
+    - `[CHAT_ID]`: Replace this with your Telegram `chat_id`.
+    - `[TELEGRAM_BOT_TOKEN]`: Replace this with your Telegram bot token.
+    - `[MESSAGE_ID]`: Replace this with your Telegram message_id.
+    - `[TZ]`: Replace this with your Timezone.
 
 3. **Make the script executable**:
    ```bash
