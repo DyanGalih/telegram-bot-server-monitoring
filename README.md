@@ -183,6 +183,11 @@ Once you have the `chat_id`, you can send a message to your chat using the `send
    - `"Initialized"` with your desired message.
 
 2. After running the command, your bot will send the message to the specified chat.
+3. You will get the return from telegram like this:
+```
+{"ok":true,"result":{"message_id":12,"from":{"id":12345,"is_bot":true,"first_name":"first_name","username":"bot_username"},"chat":{"id":-364434626,"title":"Server Monitoring","type":"group","all_members_are_administrators":true},"date":1726458968,"text":"Initialized"}}
+```
+Replace the MESSAGE_ID in the bash file to message_id from the result sendMessage telegram API
 
 ---
 
