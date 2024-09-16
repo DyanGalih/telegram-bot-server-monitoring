@@ -3,7 +3,7 @@
 # Telegram Monitor Agent
 #
 # @Author       @DyanGalih - dyan.galih@gmail.com
-# @version		0.0.1
+# @version		0.0.2
 # @date			2019-01-04
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
@@ -18,31 +18,31 @@
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 # Agent version
-version="0.0.1"
+VERSION="0.0.1"
 
 # Chat Id
-chat_id=[chat_id]
+CHAT_ID=[CHAT_ID]
 
 # Message Id
-message_id=[message_id]
+MESSAGE_ID=[MESSAGE_ID]
 
-#Telegram token
-token=[telegram_bot_token]
+# Telegram token
+TOKEN=[TELEGRAM_BOT_TOKEN]
 
 # Prepare values
-function prep ()
+function PREP ()
 {
 	echo "$1" | sed -e 's/^ *//g' -e 's/ *$//g' | sed -n '1 p'
 }
 
 # Integer values
-function int ()
+function INT ()
 {
 	echo ${1/\.*}
 }
 
 # Filter numeric
-function num ()
+function NUM ()
 {
 	case $1 in
 	    ''|*[!0-9\.]*) echo 0 ;;
@@ -51,93 +51,90 @@ function num ()
 }
 
 # OS details
-os_kernel=$(prep "$(uname -r)")
+OS_KERNEL=$(PREP "$(uname -r)")
 
 if ls /etc/*release > /dev/null 2>&1
 then
-	os_name=$(prep "$(cat /etc/*release | grep '^PRETTY_NAME=\|^NAME=\|^DISTRIB_ID=' | awk -F\= '{ print $2 }' | tr -d '"' | tac)")
+	OS_NAME=$(PREP "$(cat /etc/*release | grep '^PRETTY_NAME=\|^NAME=\|^DISTRIB_ID=' | awk -F\= '{ print $2 }' | tr -d '"' | tac)")
 fi
 
-if [ -z "$os_name" ]
+if [ -z "$OS_NAME" ]
 then
 	if [ -e /etc/redhat-release ]
 	then
-		os_name=$(prep "$(cat /etc/redhat-release)")
+		OS_NAME=$(PREP "$(cat /etc/redhat-release)")
 	elif [ -e /etc/debian_version ]
 	then
-		os_name=$(prep "Debian $(cat /etc/debian_version)")
+		OS_NAME=$(PREP "Debian $(cat /etc/debian_version)")
 	fi
 	
-	if [ -z "$os_name" ]
+	if [ -z "$OS_NAME" ]
 	then
-		os_name=$(prep "$(uname -s)")
+		OS_NAME=$(PREP "$(uname -s)")
 	fi
 fi
 
-hostname=$(prep "$(hostname)")
+HOSTNAME=$(PREP "$(hostname)")
 
-while [ true ]; do
+# System uptime
+UPTIME=$(PREP "$(uptime -p)")
 
-    # System uptime
-    uptime=$(prep "$(uptime -p)")
+# Login session count
+SESSIONS=$(PREP "$(who | wc -l)")
 
-    # Login session count
-    sessions=$(prep "$(who | wc -l)")
+# Process count
+PROCESSES=$(PREP "$(ps axc | wc -l)")
 
-    # Process count
-    processes=$(prep "$(ps axc | wc -l)")
+# File descriptors
+FILE_HANDLES=$(PREP "$(NUM "$(cat /proc/sys/fs/file-nr | awk '{ print $1 }')")")
+FILE_HANDLES_LIMIT=$(PREP $(NUM "$(cat /proc/sys/fs/file-nr | awk '{ print $3 }')"))
 
-    # File descriptors
-    file_handles=$(prep $(num "$(cat /proc/sys/fs/file-nr | awk '{ print $1 }')"))
-    file_handles_limit=$(prep $(num "$(cat /proc/sys/fs/file-nr | awk '{ print $3 }')"))
+# CPU details
+CPU_NAME=$(PREP "$(cat /proc/cpuinfo | grep 'model name' | awk -F\: '{ print $2 }')")
+CPU_CORES=$(PREP "$(($(cat /proc/cpuinfo | grep 'model name' | awk -F\: '{ print $2 }' | sed -e :a -e '$!N;s/\n/\|/;ta' | tr -cd \| | wc -c)+1))")
 
-    # CPU details
-    cpu_name=$(prep "$(cat /proc/cpuinfo | grep 'model name' | awk -F\: '{ print $2 }')")
-    cpu_cores=$(prep "$(($(cat /proc/cpuinfo | grep 'model name' | awk -F\: '{ print $2 }' | sed -e :a -e '$!N;s/\n/\|/;ta' | tr -cd \| | wc -c)+1))")
+if [ -z "$CPU_NAME" ]
+then
+    CPU_NAME=$(PREP "$(cat /proc/cpuinfo | grep 'vendor_id' | awk -F\: '{ print $2 } END { if (!NR) print "N/A" }')")
+    CPU_CORES=$(PREP "$(($(cat /proc/cpuinfo | grep 'vendor_id' | awk -F\: '{ print $2 }' | sed -e :a -e '$!N;s/\n/\|/;ta' | tr -cd \| | wc -c)+1))")
+fi
 
-    if [ -z "$cpu_name" ]
-    then
-        cpu_name=$(prep "$(cat /proc/cpuinfo | grep 'vendor_id' | awk -F\: '{ print $2 } END { if (!NR) print "N/A" }')")
-        cpu_cores=$(prep "$(($(cat /proc/cpuinfo | grep 'vendor_id' | awk -F\: '{ print $2 }' | sed -e :a -e '$!N;s/\n/\|/;ta' | tr -cd \| | wc -c)+1))")
-    fi
+CPU_FREQ=$(PREP "$(cat /proc/cpuinfo | grep 'cpu MHz' | awk -F\: '{ print $2 }')")
 
-    cpu_freq=$(prep "$(cat /proc/cpuinfo | grep 'cpu MHz' | awk -F\: '{ print $2 }')")
+if [ -z "$CPU_FREQ" ]
+then
+    CPU_FREQ=$(PREP $(NUM "$(lscpu | grep 'CPU MHz' | awk -F\: '{ print $2 }' | sed -e 's/^ *//g' -e 's/ *$//g')"))
+fi
 
-    if [ -z "$cpu_freq" ]
-    then
-        cpu_freq=$(prep $(num "$(lscpu | grep 'CPU MHz' | awk -F\: '{ print $2 }' | sed -e 's/^ *//g' -e 's/ *$//g')"))
-    fi
+# RAM usage
+RAM_TOTAL=$(PREP "$(free -h | grep ^Mem: | awk '{ print $2 }')")
+RAM_FREE=$(PREP "$(free -h | grep ^Mem: | awk '{ print $4 }')")
+RAM_AVAILABLE=$(PREP "$(free -h | grep ^Mem: | awk '{ print $7 }')")
+RAM_USAGE=$(PREP "$(free -h | grep ^Mem: | awk '{ print $3 }')")
 
-    # RAM usage
-    ram_total=$(prep "$(free -h | grep ^Mem: | awk '{ print $2 }')")
-    ram_free=$(prep "$(free -h | grep ^Mem: | awk '{ print $4 }')")
-    ram_available=$(prep "$(free -h | grep ^Mem: | awk '{ print $7 }')")
-    ram_usage=$(prep "$(free -h | grep ^Mem: | awk '{ print $3 }')")
+# Swap usage
+SWAP_TOTAL=$(PREP "$(free -h | grep ^Swap: | awk '{ print $2 }')")
+SWAP_FREE=$(PREP "$(free -h | grep ^Swap: | awk '{ print $4 }')")
+SWAP_USAGE=$(PREP "$(free -h | grep ^Swap: | awk '{ print $3 }')")
 
-    # Swap usage
-    swap_total=$(prep "$(free -h | grep ^Swap: | awk '{ print $2 }')")
-    swap_free=$(prep "$(free -h | grep ^Swap: | awk '{ print $4 }')")
-    swap_usage=$(prep "$(free -h | grep ^Swap: | awk '{ print $3 }')")
+# Disk usage
+DISK_TOTAL=$(PREP "$(df -P -B 1 -h | grep '^/' | awk '{ print $2 }')")
+DISK_USAGE=$(PREP "$(df -P -B 1 -h | grep '^/' | awk '{ print $3 }')")
+DISK_AVAILABLE=$(PREP "$(df -P -B 1 -h | grep '^/' | awk '{ print $4 }')")
 
-    # Disk usage
-    disk_total=$(prep "$(df -P -B 1 -h | grep '^/' | awk '{ print $2 }')")
-    disk_usage=$(prep "$(df -P -B 1 -h | grep '^/' | awk '{ print $3 }')")
-    disk_available=$(prep "$(df -P -B 1 -h | grep '^/' | awk '{ print $4 }')")
+# Active connections
+if [ -n "$(command -v ss)" ]
+then
+    CONNECTIONS=$(PREP $(NUM "$(ss -tun | tail -n +2 | wc -l)"))
+else
+    CONNECTIONS=$(PREP $(NUM "$(netstat -tun | tail -n +3 | wc -l)"))
+fi
 
-    # Active connections
-    if [ -n "$(command -v ss)" ]
-    then
-        connections=$(prep $(num "$(ss -tun | tail -n +2 | wc -l)"))
-    else
-        connections=$(prep $(num "$(netstat -tun | tail -n +3 | wc -l)"))
-    fi
+CPU_LOAD=$(PREP "$((100 - $(vmstat 1 2 | tail -1 | awk '{print $15}')))")
 
-    cpu_load=$(prep "$[100-$(vmstat 1 2|tail -1|awk '{print $15}')]")
+LAST_UPDATE=$(PREP "$(date|awk '{print $4 }')")
 
-    last_update=$(prep "$(date|awk '{print $4 }')")
-    # Build data for post
-    data_post="Hostname = $hostname [$last_update] %0AUptime Server = $uptime %0ARam Free = $ram_free %0ADisk Availale = $disk_available %0AConnections = $connections %0ACPU Load = $cpu_load"
+# Build data for post
+DATA="Hostname = $HOSTNAME [$LAST_UPDATE] %0AUptime Server = $UPTIME %0ARam Free = $RAM_FREE %0ADisk Available = $DISK_AVAILABLE %0AConnections = $CONNECTIONS %0ACPU Load = $CPU_LOAD"
 
-    curl -d chat_id=$chat_id -d message_id=$message_id -d text="$data_post" "https://api.telegram.org/$token/editMessageText"
-    sleep 10
-done
+curl --max-time 10 -d chat_id=$CHAT_ID -d message_id=$MESSAGE_ID -d text="$DATA" "https://api.telegram.org/bot$TOKEN/editMessageText"
