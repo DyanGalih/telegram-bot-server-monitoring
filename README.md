@@ -28,7 +28,7 @@ Before using this script, ensure you have:
    ```
 
 2. **Edit the script**:
-   Open `telegram_monitor.sh` and replace the placeholders in the script:
+   Open `tg_server_monitoring.sh` and replace the placeholders in the script:
     - `[CHAT_ID]`: Replace this with your Telegram `chat_id`.
     - `[TELEGRAM_BOT_TOKEN]`: Replace this with your Telegram bot token.
     - `[MESSAGE_ID]`: Replace this with your Telegram message_id.
@@ -36,7 +36,7 @@ Before using this script, ensure you have:
 
 3. **Make the script executable**:
    ```bash
-   chmod +x telegram_monitor.sh
+   chmod +x tg_server_monitoring.sh
    ```
 
 ## Usage
@@ -53,10 +53,10 @@ You can schedule this script to run at regular intervals using `crontab`. This s
 
 2. **Add the following line to run the script every minute**:
    ```bash
-   * * * * * /path/to/your/telegram_monitor.sh
+   * * * * * /path/to/your/tg_server_monitoring.sh
    ```
 
-   Replace `/path/to/your/telegram_monitor.sh` with the actual path to your script.
+   Replace `/path/to/your/tg_server_monitoring.sh` with the actual path to your script.
 
 3. **Save and exit**. The script will now run every minute and send system information to the specified Telegram chat.
 
@@ -81,11 +81,11 @@ Since `crontab` doesn't natively support intervals less than 1 minute, to run a 
 
 2. **Add the following lines to run the script every 30 seconds**:
    ```bash
-   * * * * * /path/to/your/telegram_monitor.sh
-   * * * * * sleep 30 && /path/to/your/telegram_monitor.sh
+   * * * * * /path/to/your/tg_server_monitoring.sh
+   * * * * * sleep 30 && /path/to/your/tg_server_monitoring.sh
    ```
 
-   Replace `/path/to/your/telegram_monitor.sh` with the actual path to your script.
+   Replace `/path/to/your/tg_server_monitoring.sh` with the actual path to your script.
 
 3. **Save and exit**. This setup will run the script at the start of every minute and then again 30 seconds later.
 
